@@ -82,6 +82,7 @@
     <ClInclude Include="fpGrouper.h" />
     <ClInclude Include="fpRecorder.h" />
     <ClInclude Include="gaborFpGenerator.h" />
+    <ClInclude Include="global.h" />
     <ClInclude Include="histogram.hpp" />
     <ClInclude Include="lbp.hpp" />
     <ClInclude Include="lbpFpGenerator.h" />

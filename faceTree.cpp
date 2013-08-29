@@ -18,6 +18,7 @@
 #include "cvgabor.h"
 #include "gaborFpGenerator.h"
 #include "fpGrouper.h"
+#include "global.h"
 //#include <vld.h>	//检测内存泄露
 
 using namespace std;
@@ -29,9 +30,9 @@ int _tmain(int argc, _TCHAR* argv[])
 {
 	cout<<"hello world"<<endl;
 	string imageLoc = "H:/pic/lena.jpg";
-	Mat image = imread(imageLoc);
+	/*Mat image = imread(imageLoc);
 	imshow("test",image);
-	waitKey();
+	waitKey();*/
 
 	//////////////////////////////////////////////////
 	////	保存lbp特征单元测试
@@ -153,7 +154,7 @@ int _tmain(int argc, _TCHAR* argv[])
 	//fs<<"lfgmEigenVectors"<<pca.eigenvectors;
 	//fs.release();
 
-	//// 特征值比例计算。step1:计算特征值的和
+	//// 特征值比例计算.step1:计算特征值的和
 	//Mat tmpSum(1,1,pca.eigenvalues.type());
 	//reduce(pca.eigenvalues,tmpSum,0,CV_REDUCE_SUM);
 	//cout<<"tmpSum"<<tmpSum<<endl;
@@ -197,36 +198,146 @@ int _tmain(int argc, _TCHAR* argv[])
 	//	imwrite(*it,dst);
 	//}
 
-	////////////////////////////////////////////////////////////////
-	//	GaborFp 生成单元测试
-	/*Mat aa;
-	for ( int i=0; i<16000; i++){
-		Mat test = Mat::ones(1,640,CV_8UC1);
-		aa.push_back(test);
-	}
-	FileStorage fs;
-	fs.open("D:/test.xml",FileStorage::WRITE);
-	fs<<"test"<<aa;
-	fs.release();*/
-	
-	/*string imageLoc = "H:/pic/lena.jpg";
-	Mat image = imread(imageLoc);
-	gaborFp::GaborFp testFp = gaborFp::GaborFp::GaborFp(image);
-	Mat test = testFp.getGaborFp();
-	fs.open("H:/test.xml",FileStorage::WRITE);
-	fs<<"test"<<test;
-	fs.release();*/
+	//////////////////////////////////////////////////////////////////
+	////	GaborFpMatrix 生成单元测试
+	//FileStorage fs;
+	//const string imageDir = "H:/360/face_urls/";
+	//vector<string> imageLocList;
+	//getFileLocList(imageDir,imageLocList);
+	//Mat gaborFpGroupMatrix;
+	//gaborFpGroupMatrix = fpGrouper::getGaborFpGroupMatrix(imageLocList);
+	//fs.open("H:/gaborFpGroupMatrix.xml",FileStorage::WRITE);
+	//fs<<"gaborFpGroupMatrix"<<gaborFpGroupMatrix;
+	//fs.release();
 
-	FileStorage fs;
-	const string imageDir = "H:/360/face_urls/";
-	vector<string> imageLocList;
-	getFileLocList(imageDir,imageLocList);
-	Mat gaborFpGroupMatrix;
-	gaborFpGroupMatrix = fpGrouper::getGaborFpGroupMatrix(imageLocList);
-	fs.open("H:/gaborFpGroupMatrix.xml",FileStorage::WRITE);
-	fs<<"gaborFpGroupMatrix"<<gaborFpGroupMatrix;
-	fs.release();
+	///////////////////////////////////////////////////////////////////
+	//	读入gabor特征矩阵
+	//FileStorage fs;
+	//fs.open(global::gabor::loc::fgmLoc,FileStorage::READ);
+	//Mat gfgm;
+	//fs[global::gabor::tag::fpGroupMatrix]>>gfgm;
+	//fs.release();
+	////	计算平均值
+	//gfgm.convertTo(gfgm,CV_32F);
+	//Mat gfgmMean;
+	//reduce(gfgm,gfgmMean,0,CV_REDUCE_AVG);
+	//fs.open(global::gabor::loc::meanLoc,FileStorage::WRITE);
+	//fs<<global::gabor::tag::mean<<gfgmMean;
+	//fs.release();
+	////	gabor特征矩阵每一列都减去平均值
+	//Mat meanMatrix;
+	//for( int i=0; i<gfgm.rows; i++){
+	//	meanMatrix.push_back(gfgmMean);
+	//}
+	//Mat test = gfgm - meanMatrix;
+	//fs.open(global::test::loc::loc,FileStorage::WRITE);
+	//cout<<global::test::loc::loc<<endl;
+	//fs<<global::test::tag::tag<<test;
+	//fs.release();
 
+	////	计算gabor特征矩阵协方差
+	//Mat gfgm;
+	//FileStorage fs;
+	//fs.open(global::gabor::loc::fgmLoc,FileStorage::READ);
+	//fs[global::gabor::tag::fpGroupMatrix]>>gfgm;
+	//gfgm.convertTo(gfgm,CV_32F);
+	//Mat gfgmCov,mean;
+	//calcCovarMatrix(gfgm,gfgmCov,mean,CV_COVAR_ROWS | CV_COVAR_NORMAL);
+	//fs.open(global::gabor::loc::covarLoc,FileStorage::WRITE);
+	//fs<<global::gabor::tag::covar<<gfgmCov;
+	//fs.release();
+
+	////	calculate and save normalization of gabor finger print group matrix 
+	//Mat gfgm;	//decleration of 'Gabor Fingerprint Group Matrix'
+	//FileStorage fs;
+	//fs.open(global::gabor::loc::fgmLoc,FileStorage::READ);
+	//fs[global::gabor::tag::fpGroupMatrix]>>gfgm;	//read data into gfgm
+	//fs.release();
+	//gfgm.convertTo(gfgm,CV_64F);
+
+	//Mat covar;	//decleration of covariance matrix of gfgm
+	//Mat mean; //decleration of mean of gfgm;
+	//calcCovarMatrix(gfgm,covar,mean,CV_COVAR_ROWS | CV_COVAR_NORMAL);
+	//covar /= static_cast<double>(gfgm.rows);
+	//Mat stdDev;	//decleration of stdandard deviation of gfgm
+	//stdDev.create(1,covar.cols,CV_64F);
+	//for ( int i=0; i<covar.rows; i++){
+	//	stdDev.at<double>(0,i) = sqrt(covar.at<double>(i,i));
+	//	cout<<"calculate standard deviation of column "<<i<<endl;
+	//}
+
+	//Mat normGfgm;	// decleration of normalized gfgm
+	//normGfgm.create(gfgm.rows,gfgm.cols,CV_64F);
+	//gfgm.copyTo(normGfgm);
+	//for ( int i=0; i<normGfgm.rows; i++ ){	//calculate normGfgm
+	//	mean.convertTo(mean,normGfgm.type());
+	//	normGfgm.row(i) -= mean;
+	//	cout<<"substract mean from row "<<i<<endl;
+	//}
+	//for ( int i=0; i<normGfgm.cols; i++ ){
+	//	normGfgm.col(i) /= stdDev.at<double>(0,i);	//calculate normGfgm
+	//	cout<<"devide standard deviation from column "<<i<<endl;
+	//}
+	//
+	//fs.open(global::gabor::loc::normGfgm,FileStorage::WRITE);	//save normGfgm
+	//fs<<global::gabor::tag::normGfgm<<normGfgm;
+	//fs.release();
+
+	//////////////////////////////////////////////////////////////////
+	////	LbpFpMatrix generation
+	//FileStorage fs;
+	//const string imageDir = "H:/360/face_urls/";
+	//vector<string> imageLocList;
+	//getFileLocList(imageDir,imageLocList);
+	//Mat lbpFpGroupMatrix;
+	//lbpFpGroupMatrix = fpGrouper::getLbpFpGroupMatrix(imageLocList);
+	//fs.open(global::lbp::loc::fgmLoc,FileStorage::WRITE);
+	//fs<<global::lbp::tag::fpGroupMatrix<<lbpFpGroupMatrix;
+	//fs.release();
+
+	////	calculate and save normalization of Lbp finger print group matrix 
+	//Mat lfgm;	//decleration of 'Lbp Fingerprint Group Matrix'
+	//FileStorage fs;
+	//fs.open(global::lbp::loc::fgmLoc,FileStorage::READ);
+	//fs[global::lbp::tag::fpGroupMatrix]>>lfgm;	//read data into lfgm
+	//fs.release();
+	//lfgm.convertTo(lfgm,CV_64F);
+
+	//Mat covar;	//decleration of covariance matrix of lfgm
+	//Mat mean; //decleration of mean of lfgm;
+	//calcCovarMatrix(lfgm,covar,mean,CV_COVAR_ROWS | CV_COVAR_NORMAL);
+	//covar /= static_cast<double>(lfgm.rows);
+	//Mat stdDev;	//decleration of stdandard deviation of lfgm
+	//stdDev.create(1,covar.cols,CV_64F);
+	//for ( int i=0; i<covar.rows; i++){
+	//	stdDev.at<double>(0,i) = sqrt(covar.at<double>(i,i));
+	//	cout<<"calculate standard deviation of column "<<i<<endl;
+	//}
+
+	//Mat normlfgm;	// decleration of normalized lfgm
+	//normlfgm.create(lfgm.rows,lfgm.cols,CV_64F);
+	//lfgm.copyTo(normlfgm);
+	//for ( int i=0; i<normlfgm.rows; i++ ){	//calculate normlfgm
+	//	mean.convertTo(mean,normlfgm.type());
+	//	normlfgm.row(i) -= mean;
+	//	cout<<"substract mean from row "<<i<<endl;
+	//}
+	//for ( int i=0; i<normlfgm.cols; i++ ){
+	//	normlfgm.col(i) /= stdDev.at<double>(0,i);	//calculate normlfgm
+	//	cout<<"devide standard deviation from column "<<i<<endl;
+	//}
+	//
+	//fs.open(global::lbp::loc::normLfgm,FileStorage::WRITE);	//save normlfgm
+	//fs<<global::lbp::tag::normLfgm<<normlfgm;
+	//fs.release();
+
+	Mat test1 = Mat::zeros(2,2,CV_8UC1);
+	Mat test2 = Mat::ones(2,3,CV_8UC1);
+	cout<<"test1"<<test1<<endl;
+	cout<<"test2"<<test2<<endl;
+
+	hconcat(test1,test2,test1);
+	cout<<"test1"<<test1<<endl;
 	system("pause");
 	return 0;
 }
