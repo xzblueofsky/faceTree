@@ -11,7 +11,7 @@
 #include "lbp.hpp"
 #include "histogram.hpp"
 #include "lbpFpGenerator.h"
-
+#include <direct.h>
 #include <io.h>
 #include <fstream>
 #include "fpRecorder.h"
@@ -19,12 +19,51 @@
 #include "gaborFpGenerator.h"
 #include "fpGrouper.h"
 #include "global.h"
+#include "zScoreObj.h"
+
+extern "C"{
+#include "cluster.h"
+}
 //#include <vld.h>	//检测内存泄露
 
 using namespace std;
 using namespace cv;
 
 int getFileLocList( const string& dir, vector<string>& fileLocList );
+void example_hierarchical(int nrows, int ncols, double** data, int** mask,double** distmatrix);
+double** example_distance_gene(int nrows, int ncols, double** data, int** mask)
+	/* Calculate the distance matrix between genes using the Euclidean distance. */
+{ int i, j;
+double** distMatrix;
+double* weight = (double*)malloc(ncols*sizeof(double));
+printf("============ Euclidean distance matrix between genes ============\n");
+for (i = 0; i < ncols; i++) weight[i] = 1.0;
+distMatrix = distancematrix(nrows, ncols, data, mask, weight, 'e', 0);
+if (!distMatrix)
+{ printf ("Insufficient memory to store the distance matrix\n");
+free(weight);
+return NULL;
+}
+printf("   Gene:");
+for(i=0; i<nrows-1; i++) printf("%6d", i);
+printf("\n");
+for(i=0; i<nrows; i++)
+{ printf("Gene %2d:",i);
+for(j=0; j<i; j++) printf(" %5.2f",distMatrix[i][j]);
+printf("\n");
+}
+printf("\n");
+free(weight);
+return distMatrix;
+}
+
+string zxitoa(int num){
+	stringstream ss;
+	ss<<num;
+	string str;
+	ss>>str;
+	return str;
+}
 
 int _tmain(int argc, _TCHAR* argv[])
 {
@@ -331,13 +370,180 @@ int _tmain(int argc, _TCHAR* argv[])
 	//fs<<global::lbp::tag::normLfgm<<normlfgm;
 	//fs.release();
 
-	Mat test1 = Mat::zeros(2,2,CV_8UC1);
-	Mat test2 = Mat::ones(2,3,CV_8UC1);
-	cout<<"test1"<<test1<<endl;
-	cout<<"test2"<<test2<<endl;
+	////test column concat
+	//Mat test1 = Mat::zeros(2,2,CV_8UC1);
+	//Mat test2 = Mat::ones(2,3,CV_8UC1);
+	//cout<<"test1"<<test1<<endl;
+	//cout<<"test2"<<test2<<endl;
+	//
+	//hconcat(test1,test2,test1);
+	//cout<<"test1"<<test1<<endl;
 
-	hconcat(test1,test2,test1);
-	cout<<"test1"<<test1<<endl;
+	////gabor pca
+	////640降至132维，80%能量,计算耗时8个小时
+	//FileStorage fs;
+	//fs.open(global::gabor::loc::normGfgm,FileStorage::READ);
+	//Mat normGfgm;
+	//fs[global::gabor::tag::normGfgm]>>normGfgm;
+	//PCA pca(normGfgm,Mat(),CV_PCA_DATA_AS_ROW,132);
+	//cout<<"pca eigen values:"<<pca.eigenvalues<<endl;
+
+	//fs.open(global::gabor::pca::loc::eigenValues,FileStorage::WRITE);
+	//fs<<global::gabor::pca::tag::eigenValues<<pca.eigenvalues;
+	//fs.release();
+
+	//fs.open(global::gabor::pca::loc::eigenVectors,FileStorage::WRITE);
+	//fs<<global::gabor::pca::tag::eigenVectors<<pca.eigenvectors;
+	//fs.release();
+
+	//Mat gfgmProjected;
+	//for ( int i=0; i<normGfgm.rows; i++){
+	//	pca.project(normGfgm,gfgmProjected);
+	//}
+	//fs.open(global::gabor::pca::loc::projected,FileStorage::WRITE);
+	//fs<<global::gabor::pca::tag::projected<<gfgmProjected;
+	//fs.release();
+
+	////lbp pca
+	////256维降至10维，82%能量，计算耗时2小时
+	//FileStorage fs;
+	//fs.open(global::lbp::loc::normLfgm,FileStorage::READ);
+	//Mat normLfgm;
+	//fs[global::lbp::tag::normLfgm]>>normLfgm;
+	//PCA pca(normLfgm,Mat(),CV_PCA_DATA_AS_ROW,10);
+	//cout<<"pca eigen values:"<<pca.eigenvalues<<endl;
+
+	//fs.open(global::lbp::pca::loc::eigenValues,FileStorage::WRITE);
+	//fs<<global::lbp::pca::tag::eigenValues<<pca.eigenvalues;
+	//fs.release();
+
+	//fs.open(global::lbp::pca::loc::eigenVectors,FileStorage::WRITE);
+	//fs<<global::lbp::pca::tag::eigenVectors<<pca.eigenvectors;
+	//fs.release();
+
+	//Mat lfgmProjected;
+	//for ( int i=0; i<normLfgm.rows; i++){
+	//	pca.project(normLfgm,lfgmProjected);
+	//}
+	//fs.open(global::lbp::pca::loc::projected,FileStorage::WRITE);
+	//fs<<global::lbp::pca::tag::projected<<lfgmProjected;
+	//fs.release();
+
+	////generate z-score fingerprint matrix
+	//Mat gaborPart,lbpPart;
+	//FileStorage fs;
+	//fs.open(global::gabor::pca::loc::projected,FileStorage::READ);
+	//fs[global::gabor::pca::tag::projected]>>gaborPart;
+	//fs.release();
+
+	//fs.open(global::lbp::pca::loc::projected,FileStorage::READ);
+	//fs[global::lbp::pca::tag::projected]>>lbpPart;
+	//fs.release();
+
+	//Mat zScore;
+	//hconcat(gaborPart,lbpPart,zScore);
+	//fs.open(global::z_score::loc::fileLoc,FileStorage::WRITE);
+	//fs<<global::z_score::tag::tag<<zScore;
+	//fs.release();
+
+	////read zScore raw data from xml file
+	// Mat zScore;
+	// FileStorage fs;
+	// fs.open(global::z_score::loc::fileLoc,FileStorage::READ);
+	// fs[global::z_score::tag::tag]>>zScore;
+	// fs.release();
+	////read corresponding image name from image database folder
+	// vector<string> imageLocList;
+	// getFileLocList(global::dataBase::location,imageLocList);
+	//// generage zScore object vector
+	// vector<zScoreObj> zList;
+	// for ( int i=0; i<imageLocList.size(); i++ ){
+	//	zScoreObj zObj(imageLocList[i],zScore.row(i));
+	//	zList.push_back(zObj);
+	//	cout<<i<<"th zScoreObj is writed."<<endl;
+	// }
+	////	write zScore object vector to binary file
+	// ofstream ofs;
+	// ofs.open(global::z_score::loc::calcLoc,ios::binary);
+	// int size1 = zList.size();
+	// ofs.write((const char*)&size1,sizeof(int));
+	// ofs.write((const char*)&zList[0],size1*sizeof(zScoreObj));
+	// ofs.close();
+
+	 /*vector<zScoreObj> zList1;
+	 ifstream ifs;
+	 ifs.open(global::z_score::loc::calcLoc,ios::binary);
+	 int size2;
+	 ifs.read((char*)&size2,sizeof(int));
+	 zList1.resize(size2);
+	 ifs.read((char*)&zList1[0],size2*sizeof(zScoreObj));
+	 ifs.close();
+	 for ( vector<zScoreObj>::iterator it = zList1.begin(); it!=zList1.end(); ++it){
+		Mat image = imread(it->getImageLoc());
+		imshow("test",image);
+		waitKey();
+	 }*/
+
+	 vector<zScoreObj> zListTest;
+	 ifstream ifs;
+	 int size;
+	 ifs.open(global::test::z_score::loc::calcLoc,ios::binary);
+	 ifs.read((char*)&size,sizeof(int));
+	 zListTest.resize(size);
+	 ifs.read((char*)&zListTest[0],size*sizeof(zScoreObj));
+	 ifs.close();
+
+	 double** data= (double**)malloc(global::test::dataBase::sampleNum*sizeof(double*));
+	 for ( int i=0; i<global::test::dataBase::sampleNum; i++ ){
+		 data[i] = (double*)malloc(global::test::dataBase::fpDimension*sizeof(double));
+	 }
+
+	 for ( int i=0; i<global::test::dataBase::sampleNum; i++ ) {
+		 for ( int j=0; j<global::test::dataBase::fpDimension; j++ ){
+			 data[i][j] = zListTest[i].getData(j);
+		 }
+	 }
+
+	double** distmatrix;
+
+	const int nrows = global::test::dataBase::sampleNum;
+	const int ncols = global::test::dataBase::fpDimension;
+	int** mask = (int**)malloc(nrows*sizeof(int*));
+
+	for (int i = 0; i < nrows; i++){ 
+		mask[i] = (int*)malloc(ncols*sizeof(int));
+	}
+	for (int i = 0; i<nrows; i++){
+		for ( int j=0; j<ncols; j++){
+			mask[i][j] = 1;
+		}
+	}
+
+	distmatrix = example_distance_gene(global::test::dataBase::sampleNum, global::test::dataBase::fpDimension, data, mask);
+	if (distmatrix) example_hierarchical(nrows, ncols, data, mask, distmatrix);
+
+
+	Node* tree;
+	double* weight = (double*)malloc(ncols*sizeof(double));
+	for (int i = 0; i < ncols; i++) weight[i] = 1.0;
+	tree = treecluster(nrows, ncols, data, mask, weight, 0, 'e', 'm', 0);
+	//int* clusterid = new int[global::test::dataBase::sampleNum];
+	int clusterid[16];
+	cuttree(global::test::dataBase::sampleNum,tree,8,clusterid);
+
+	string imageDir = global::test::dataBase::location;
+	string clusterDir = "E:/360/face/test/result/cluster/";
+	for ( int i=0; i<16; i++ ){
+		string imageLoc = imageDir + zxitoa(i+1) + ".jpg";
+		Mat image = imread(imageLoc);
+		string clusterSubDir = clusterDir + zxitoa(clusterid[i]);
+		_mkdir(clusterSubDir.c_str());
+		string clusterLoc = clusterSubDir + "/" +zxitoa(i+1) + ".jpg";
+		imwrite(clusterLoc,image);
+	}
+
+	string test = zxitoa(15);
+	cout<<test<<endl;
 	system("pause");
 	return 0;
 }
@@ -368,4 +574,54 @@ int getFileLocList( const string& dir, vector<string>& fileLocList )
 	_findclose(handle);
 
 	return 0;
+}
+
+void example_hierarchical(int nrows, int ncols, double** data, int** mask,double** distmatrix){
+	int i;
+	const int nnodes = nrows-1;
+	double* weight = (double*)malloc(ncols*sizeof(double));
+	int* clusterid;
+	Node* tree;
+	for (i = 0; i < ncols; i++) weight[i] = 1.0;
+	printf("\n");
+	printf("================ Pairwise single linkage clustering ============\n");
+	/* Since we have the distance matrix here, we may as well use it. */
+	tree = treecluster(nrows, ncols, 0, 0, 0, 0, 'e', 's', distmatrix);
+	/* The distance matrix was modified by treecluster, so we cannot use it any
+	* more. But we still need to deallocate it here.
+	* The first row of distmatrix is a single null pointer; no need to free it.
+	*/
+	for (i = 1; i < nrows; i++) free(distmatrix[i]);
+	free(distmatrix);
+	if (!tree)
+	{ /* Indication that the treecluster routine failed */
+		printf ("treecluster routine failed due to insufficient memory\n");
+		free(weight);
+		return;
+	}
+	printf("Node     Item 1   Item 2    Distance\n");
+	for(i=0; i<nnodes; i++)
+		printf("%3d:%9d%9d      %g\n",
+		-i-1, tree[i].left, tree[i].right, tree[i].distance);
+	printf("\n");
+	free(tree);
+	printf("================ Pairwise maximum linkage clustering ============\n");
+	tree = treecluster(nrows, ncols, data, mask, weight, 0, 'e', 'm', 0);
+	/* Here, we let treecluster calculate the distance matrix for us. In that
+	* case, the treecluster routine may fail due to insufficient memory to store
+	* the distance matrix. For the small data sets in this example, that is
+	* unlikely to occur though. Let's check for it anyway:
+	*/
+	if (!tree)
+	{ /* Indication that the treecluster routine failed */
+		printf ("treecluster routine failed due to insufficient memory\n");
+		free(weight);
+		return;
+	}
+	printf("Node     Item 1   Item 2    Distance\n");
+	for(i=0; i<nnodes; i++)
+		printf("%3d:%9d%9d      %g\n",
+		-i-1, tree[i].left, tree[i].right, tree[i].distance);
+	printf("\n");
+	free(tree);
 }

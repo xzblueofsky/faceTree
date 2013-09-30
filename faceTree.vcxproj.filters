@@ -48,6 +48,21 @@
     <ClInclude Include="global.h">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="zScoreObj.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="cluster.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="command.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="data.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="dirent.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">
@@ -75,6 +90,18 @@
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="fpGrouper.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="zScoreObj.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="cluster.c">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="command.c">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="data.c">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>
