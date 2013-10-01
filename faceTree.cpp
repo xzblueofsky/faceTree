@@ -470,7 +470,9 @@ int _tmain(int argc, _TCHAR* argv[])
 	// ofs.write((const char*)&zList[0],size1*sizeof(zScoreObj));
 	// ofs.close();
 
-	 /*vector<zScoreObj> zList1;
+	//read zScore data from dat file
+	cout<<"read zScore data from dat file"<<endl;
+	 vector<zScoreObj> zList1;
 	 ifstream ifs;
 	 ifs.open(global::z_score::loc::calcLoc,ios::binary);
 	 int size2;
@@ -478,38 +480,28 @@ int _tmain(int argc, _TCHAR* argv[])
 	 zList1.resize(size2);
 	 ifs.read((char*)&zList1[0],size2*sizeof(zScoreObj));
 	 ifs.close();
-	 for ( vector<zScoreObj>::iterator it = zList1.begin(); it!=zList1.end(); ++it){
-		Mat image = imread(it->getImageLoc());
-		imshow("test",image);
-		waitKey();
-	 }*/
 
-	 vector<zScoreObj> zListTest;
-	 ifstream ifs;
-	 int size;
-	 ifs.open(global::test::z_score::loc::calcLoc,ios::binary);
-	 ifs.read((char*)&size,sizeof(int));
-	 zListTest.resize(size);
-	 ifs.read((char*)&zListTest[0],size*sizeof(zScoreObj));
-	 ifs.close();
-
-	 double** data= (double**)malloc(global::test::dataBase::sampleNum*sizeof(double*));
-	 for ( int i=0; i<global::test::dataBase::sampleNum; i++ ){
-		 data[i] = (double*)malloc(global::test::dataBase::fpDimension*sizeof(double));
+	 // allocate memory for input data matrix
+	 cout<<"allocate memory for input data matrix"<<endl;
+	 double** data= (double**)malloc(global::dataBase::sampleNum*sizeof(double*));
+	 for ( int i=0; i<global::dataBase::sampleNum; i++ ){
+		 data[i] = (double*)malloc(global::dataBase::fpDimension*sizeof(double));
 	 }
-
-	 for ( int i=0; i<global::test::dataBase::sampleNum; i++ ) {
-		 for ( int j=0; j<global::test::dataBase::fpDimension; j++ ){
-			 data[i][j] = zListTest[i].getData(j);
+	 // initialize cluster input data matrix
+	 cout<<"initialize cluster input data matrix"<<endl;
+	 for ( int i=0; i<global::dataBase::sampleNum; i++ ) {
+		 for ( int j=0; j<global::dataBase::fpDimension; j++ ){
+			 data[i][j] = zList1[i].getData(j);
 		 }
 	 }
 
 	double** distmatrix;
 
-	const int nrows = global::test::dataBase::sampleNum;
-	const int ncols = global::test::dataBase::fpDimension;
+	const int nrows = global::dataBase::sampleNum;
+	const int ncols = global::dataBase::fpDimension;
 	int** mask = (int**)malloc(nrows*sizeof(int*));
-
+	// initialize mask matrix for clustering
+	cout<<"initialize mask matrix for clustering"<<endl;
 	for (int i = 0; i < nrows; i++){ 
 		mask[i] = (int*)malloc(ncols*sizeof(int));
 	}
@@ -518,22 +510,24 @@ int _tmain(int argc, _TCHAR* argv[])
 			mask[i][j] = 1;
 		}
 	}
-
-	distmatrix = example_distance_gene(global::test::dataBase::sampleNum, global::test::dataBase::fpDimension, data, mask);
-	if (distmatrix) example_hierarchical(nrows, ncols, data, mask, distmatrix);
-
-
+	//initialize weights for clustering
+	cout<<"initialize weights for clustering"<<endl;
 	Node* tree;
 	double* weight = (double*)malloc(ncols*sizeof(double));
 	for (int i = 0; i < ncols; i++) weight[i] = 1.0;
+	//do clustering
+	cout<<"do clustering"<<endl;
 	tree = treecluster(nrows, ncols, data, mask, weight, 0, 'e', 'm', 0);
-	//int* clusterid = new int[global::test::dataBase::sampleNum];
-	int clusterid[16];
-	cuttree(global::test::dataBase::sampleNum,tree,8,clusterid);
-
-	string imageDir = global::test::dataBase::location;
-	string clusterDir = "E:/360/face/test/result/cluster/";
-	for ( int i=0; i<16; i++ ){
+	int clusterid[global::dataBase::sampleNum];
+	//set clusterNum, the number of clusters after train
+	const int clusterNum = 20;
+	cout<<"clusterNum is "<<clusterNum<<endl;
+	cuttree(global::dataBase::sampleNum,tree,clusterNum,clusterid);
+	//write cluster result
+	string imageDir = global::dataBase::location;
+	string clusterDir = global::dataBase::cluster;
+	for ( int i=0; i<global::dataBase::sampleNum; i++ ){
+		cout<<"image "<<i<<".jpg is allocate to "<<clusterid[i]<<"th class"<<endl;
 		string imageLoc = imageDir + zxitoa(i+1) + ".jpg";
 		Mat image = imread(imageLoc);
 		string clusterSubDir = clusterDir + zxitoa(clusterid[i]);

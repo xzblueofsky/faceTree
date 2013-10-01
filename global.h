@@ -75,6 +75,10 @@ namespace global{
 
 	namespace dataBase{
 		const static string location = "E:/360/face/face_urls_com/";
+		const static int fpDimension = 132;
+		const static int sampleNum = 11626;
+		const static string dataFile = "E:/360/face/result/data.txt";
+		const static string cluster = "E:/360/face/result/cluster/";
 	}
 
 	namespace test{
