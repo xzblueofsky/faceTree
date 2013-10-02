@@ -472,55 +472,90 @@ int _tmain(int argc, _TCHAR* argv[])
 
 	//read zScore data from dat file
 	cout<<"read zScore data from dat file"<<endl;
-	 vector<zScoreObj> zList1;
+	 vector<zScoreObj> zList;
 	 ifstream ifs;
 	 ifs.open(global::z_score::loc::calcLoc,ios::binary);
 	 int size2;
 	 ifs.read((char*)&size2,sizeof(int));
-	 zList1.resize(size2);
-	 ifs.read((char*)&zList1[0],size2*sizeof(zScoreObj));
+	 zList.resize(size2);
+	 ifs.read((char*)&zList[0],size2*sizeof(zScoreObj));
 	 ifs.close();
 
-	 // allocate memory for input data matrix
-	 cout<<"allocate memory for input data matrix"<<endl;
-	 double** data= (double**)malloc(global::dataBase::sampleNum*sizeof(double*));
-	 for ( int i=0; i<global::dataBase::sampleNum; i++ ){
-		 data[i] = (double*)malloc(global::dataBase::fpDimension*sizeof(double));
-	 }
-	 // initialize cluster input data matrix
-	 cout<<"initialize cluster input data matrix"<<endl;
-	 for ( int i=0; i<global::dataBase::sampleNum; i++ ) {
-		 for ( int j=0; j<global::dataBase::fpDimension; j++ ){
-			 data[i][j] = zList1[i].getData(j);
-		 }
-	 }
+	//input test data
+	 /*vector<zScoreObj> zListTest;
+	 ifstream ifs;
+	 int size;
+	 ifs.open(global::test::z_score::loc::calcLoc,ios::binary);
+	 ifs.read((char*)&size,sizeof(int));
+	 zListTest.resize(size);
+	 ifs.read((char*)&zListTest[0],size*sizeof(zScoreObj));
+	 ifs.close();*/
 
-	double** distmatrix;
+	// // allocate memory for input data matrix
+	// cout<<"allocate memory for input data matrix"<<endl;
+	// double** data= (double**)malloc(global::dataBase::sampleNum*sizeof(double*));
+	// for ( int i=0; i<global::dataBase::sampleNum; i++ ){
+	//	 data[i] = (double*)malloc(global::dataBase::fpDimension*sizeof(double));
+	// }
+	// // initialize cluster input data matrix
+	// cout<<"initialize cluster input data matrix"<<endl;
+	// for ( int i=0; i<global::dataBase::sampleNum; i++ ) {
+	//	 for ( int j=0; j<global::dataBase::fpDimension; j++ ){
+	//		 data[i][j] = zList[i].getData(j);
+	//	 }
+	// }
 
-	const int nrows = global::dataBase::sampleNum;
-	const int ncols = global::dataBase::fpDimension;
-	int** mask = (int**)malloc(nrows*sizeof(int*));
-	// initialize mask matrix for clustering
-	cout<<"initialize mask matrix for clustering"<<endl;
-	for (int i = 0; i < nrows; i++){ 
-		mask[i] = (int*)malloc(ncols*sizeof(int));
-	}
-	for (int i = 0; i<nrows; i++){
-		for ( int j=0; j<ncols; j++){
-			mask[i][j] = 1;
-		}
-	}
-	//initialize weights for clustering
-	cout<<"initialize weights for clustering"<<endl;
+	//const int nrows = global::dataBase::sampleNum;
+	//const int ncols = global::dataBase::fpDimension;
+	//int** mask = (int**)malloc(nrows*sizeof(int*));
+	//// initialize mask matrix for clustering
+	//cout<<"initialize mask matrix for clustering"<<endl;
+	//for (int i = 0; i < nrows; i++){ 
+	//	mask[i] = (int*)malloc(ncols*sizeof(int));
+	//}
+	//for (int i = 0; i<nrows; i++){
+	//	for ( int j=0; j<ncols; j++){
+	//		mask[i][j] = 1;
+	//	}
+	//}
+	////initialize weights for clustering
+	//cout<<"initialize weights for clustering"<<endl;
+	//double* weight = (double*)malloc(ncols*sizeof(double));
+	//for (int i = 0; i < ncols; i++){
+	//	weight[i] = 1.0;
+	//}
+
+	////caculate distance matrix
+	//distmatrix = distancematrix(nrows, ncols, data, mask, weight, 'e', 0);
+	
+	////do clustering
+	//cout<<"do clustering"<<endl;
+	//Node* tree;
+	//tree = treecluster(nrows, ncols, data, mask, weight, 0, 'e', 'm', 0);
+	
+	////write cluster result into a binary file with suffix .dat
+	//cout<<"write cluster result into a binary file with suffix .dat"<<endl;
+	//int sizeWrite = global::dataBase::sampleNum-1;	//number of tree nodes
+	//ofstream ofs;
+	//ofs.open(global::dataBase::faceTreeFileLoc,ios::binary);
+	//ofs.write((char*)&sizeWrite,sizeof(int));
+	//ofs.write((char*)&tree[0],sizeWrite*sizeof(Node));
+	//ofs.close();
+	//free(tree);
+	
+	 // read cluster result from .dat binary file
+	ifs.open(global::dataBase::faceTreeFileLoc,ios::binary);
+	int sizeRead;
+	ifs.read((char*)&sizeRead,sizeof(int));
 	Node* tree;
-	double* weight = (double*)malloc(ncols*sizeof(double));
-	for (int i = 0; i < ncols; i++) weight[i] = 1.0;
-	//do clustering
-	cout<<"do clustering"<<endl;
-	tree = treecluster(nrows, ncols, data, mask, weight, 0, 'e', 'm', 0);
+	tree = new Node[sizeRead];
+	ifs.read((char*)&tree[0],sizeRead*sizeof(Node));
+	ifs.close();
+
+	//cut tree
 	int clusterid[global::dataBase::sampleNum];
 	//set clusterNum, the number of clusters after train
-	const int clusterNum = 20;
+	const int clusterNum = 5000;
 	cout<<"clusterNum is "<<clusterNum<<endl;
 	cuttree(global::dataBase::sampleNum,tree,clusterNum,clusterid);
 	//write cluster result
@@ -535,6 +570,7 @@ int _tmain(int argc, _TCHAR* argv[])
 		string clusterLoc = clusterSubDir + "/" +zxitoa(i+1) + ".jpg";
 		imwrite(clusterLoc,image);
 	}
+	delete [] tree;
 
 	string test = zxitoa(15);
 	cout<<test<<endl;

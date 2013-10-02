@@ -79,6 +79,7 @@ namespace global{
 		const static int sampleNum = 11626;
 		const static string dataFile = "E:/360/face/result/data.txt";
 		const static string cluster = "E:/360/face/result/cluster/";
+		const static string faceTreeFileLoc = "E:/360/face/result/faceTree.dat";
 	}
 
 	namespace test{
@@ -163,6 +164,7 @@ namespace global{
 			const static int sampleNum = 16;
 			const static string dataFile = "E:/360/face/test/data.txt";
 			const static string cluster = "E:/360/face/test/result/cluster/";
+			const static string faceTreeFileLoc = "E:/360/face/test/result/faceTree.dat";
 		}
 	}
 
